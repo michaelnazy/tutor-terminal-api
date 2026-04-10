@@ -1,83 +1,32 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
-from datetime import date, time, datetime
 
 # ==========================================
-# STUDENT SCHEMAS
+# COURSE SCHEMAS
 # ==========================================
-class StudentCreate(BaseModel):
-    first_name: str
-    last_name: str
-    email: EmailStr
-    phone: Optional[str] = None
+class CourseCreate(BaseModel):
+    course_name: str
+    course_code: str
+    professor_email: str
+    room_number: Optional[str] = None
 
-class Student(StudentCreate):
+class Course(CourseCreate):
     id: int
 
     class Config:
         from_attributes = True
 
 # ==========================================
-# SUBJECT SCHEMAS
+# MODULE SCHEMAS
 # ==========================================
-class SubjectCreate(BaseModel):
-    name: str
-    hourly_rate: int
+class ModuleCreate(BaseModel):
+    due_date: str
+    title: str
+    progress_percentage: float
 
-class Subject(SubjectCreate):
+class ModuleResponse(ModuleCreate):
     id: int
-
-    class Config:
-        from_attributes = True
-
-# ==========================================
-# LESSON SCHEMAS
-# ==========================================
-class LessonCreate(BaseModel):
-    student_id: int
-    subject_id: int
-    date: date
-    time: time
-    duration_minutes: int
-
-class Lesson(LessonCreate):
-    id: int
-    status: str
-
-    class Config:
-        from_attributes = True
-
-# ==========================================
-# UPDATE SCHEMAS
-# ==========================================
-class LessonUpdate(BaseModel):
-    status: str
-
-# ==========================================
-# NOTE SCHEMAS (Phase 6)
-# ==========================================
-class NoteCreate(BaseModel):
-    content: str
-
-class Note(NoteCreate):
-    id: int
-    lesson_id: int
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-# ==========================================
-# SESSION TRACKING SCHEMAS (NEW)
-# ==========================================
-class SessionCreate(BaseModel):
-    date: str
-    topic: str
-    price: float
-
-class SessionResponse(SessionCreate):
-    id: int
-    student_id: int
+    course_id: int
 
     class Config:
         from_attributes = True
