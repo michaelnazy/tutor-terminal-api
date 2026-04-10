@@ -1,32 +1,29 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 
-# ==========================================
-# COURSE SCHEMAS
-# ==========================================
+class ModuleBase(BaseModel):
+    title: str
+    progress_percentage: float = 0.0
+
+class ModuleResponse(ModuleBase):
+    id: int
+    exam_id: int
+    class Config: from_attributes = True
+
+class ExamCreate(BaseModel):
+    exam_name: str
+    exam_date: str
+
+class ExamResponse(ExamCreate):
+    id: int
+    course_id: int
+    class Config: from_attributes = True
+
 class CourseCreate(BaseModel):
     course_name: str
     course_code: str
-    professor_email: str
-    room_number: Optional[str] = None
+    room_number: str
 
-class Course(CourseCreate):
+class CourseResponse(CourseCreate):
     id: int
-
-    class Config:
-        from_attributes = True
-
-# ==========================================
-# MODULE SCHEMAS
-# ==========================================
-class ModuleCreate(BaseModel):
-    due_date: str
-    title: str
-    progress_percentage: float
-
-class ModuleResponse(ModuleCreate):
-    id: int
-    course_id: int
-
-    class Config:
-        from_attributes = True
+    class Config: from_attributes = True
