@@ -79,3 +79,14 @@ def create_module(course_id: int, module: schemas.ModuleCreate, db: Session = De
 @app.get("/courses/{course_id}/modules/", response_model=list[schemas.ModuleResponse])
 def get_modules(course_id: int, db: Session = Depends(get_db)):
     return db.query(models.ModuleModel).filter(models.ModuleModel.course_id == course_id).all()
+
+@app.put("/modules/{module_id}", response_model=schemas.ModuleResponse)
+def update_module_progress(module_id: int, progress: float, db: Session = Depends(get_db)):
+    db_module = db.query(models.ModuleModel).filter(models.ModuleModel.id == module_id).first()
+    if not db_module:
+        raise HTTPException(status_code=404, detail="Module not found")
+    
+    db_module.progress_percentage = progress
+    db.commit()
+    db.refresh(db_module)
+    return db_module
