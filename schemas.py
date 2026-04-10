@@ -66,3 +66,18 @@ class Note(NoteCreate):
 
     class Config:
         from_attributes = True
+
+# ==========================================
+# SESSION TRACKING SCHEMAS (NEW)
+# ==========================================
+class SessionCreate(BaseModel):
+    date: str
+    topic: str
+    price: float
+
+class SessionResponse(SessionCreate):
+    id: int
+    student_id: int
+
+    class Config:
+        from_attributes = True

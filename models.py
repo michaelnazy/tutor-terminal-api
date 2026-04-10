@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Time, Text, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Time, Text, DateTime, Float
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
 
@@ -16,6 +16,8 @@ class Student(Base):
 
     # This creates a virtual link to see all lessons for a specific student
     lessons = relationship("Lesson", back_populates="student")
+    # --- NEW: Link to our new sessions table ---
+    sessions = relationship("SessionModel", back_populates="student")
 
 class Subject(Base):
     __tablename__ = "subjects"
@@ -52,3 +54,18 @@ class Note(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     lesson = relationship("Lesson", back_populates="notes")
+
+# ==========================================
+# NEW: SESSION TRACKING MODEL
+# ==========================================
+class SessionModel(Base):
+    __tablename__ = "sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"))
+    date = Column(String(50), nullable=False)
+    topic = Column(String(255), nullable=False)
+    price = Column(Float, nullable=False)
+
+    # Link back to the student
+    student = relationship("Student", back_populates="sessions")

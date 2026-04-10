@@ -97,7 +97,6 @@ def delete_student(student_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Student {student_id} erased from system."}
 
-# --- NEW: UPDATE STUDENT ROUTE ---
 @app.put("/students/{student_id}", response_model=schemas.Student)
 def update_student(student_id: int, student_update: schemas.StudentCreate, db: Session = Depends(get_db)):
     db_student = db.query(models.Student).filter(models.Student.id == student_id).first()
@@ -148,7 +147,6 @@ def create_lesson(lesson: schemas.LessonCreate, db: Session = Depends(get_db)):
 
 @app.get("/students/{student_id}/lessons/", response_model=list[schemas.Lesson])
 def get_student_lessons(student_id: int, db: Session = Depends(get_db)):
-    # FIXED: Now correctly filters by student_id instead of the lesson's id
     lessons = db.query(models.Lesson).filter(models.Lesson.student_id == student_id).all()
     if not lessons:
         raise HTTPException(status_code=404, detail="No lessons found")
@@ -180,3 +178,20 @@ def add_lesson_note(lesson_id: int, note: schemas.NoteCreate, db: Session = Depe
     db.commit()
     db.refresh(new_note)
     return new_note
+
+# ==========================================
+# 6. SESSION TRACKING ROUTES (NEW)
+# ==========================================
+
+@app.post("/students/{student_id}/sessions/", response_model=schemas.SessionResponse)
+def create_session(student_id: int, session: schemas.SessionCreate, db: Session = Depends(get_db)):
+    new_session = models.SessionModel(**session.dict(), student_id=student_id)
+    db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
+    return new_session
+
+@app.get("/students/{student_id}/sessions/", response_model=list[schemas.SessionResponse])
+def get_sessions(student_id: int, db: Session = Depends(get_db)):
+    sessions = db.query(models.SessionModel).filter(models.SessionModel.student_id == student_id).all()
+    return sessions
