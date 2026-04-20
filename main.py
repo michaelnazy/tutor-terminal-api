@@ -131,7 +131,7 @@ async def generate_flashcards(req: NotesRequest):
     
     try:
         # Load the Gemini AI model
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         # Give the AI strict instructions
         prompt = f"""
