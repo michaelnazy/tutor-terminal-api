@@ -7,9 +7,14 @@ import os
 from dotenv import load_dotenv
 from typing import List
 
+# --- NEW AI IMPORTS ---
+import google.generativeai as genai
+import json
+from pydantic import BaseModel
+
 load_dotenv()
 
-# THE ENGINE: This is the 'app' the error was complaining about!
+# THE ENGINE
 app = FastAPI(title="Student Survival API")
 
 app.add_middleware(
@@ -21,12 +26,21 @@ app.add_middleware(
     expose_headers=["*"]
 )
 
+# --- AI CONFIGURATION ---
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+
+# Define what the incoming AI request looks like
+class NotesRequest(BaseModel):
+    text: str
+
 # DATABASE SETUP
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# This creates the new Exams table automatically
+# This creates the new tables automatically
 models.Base.metadata.create_all(bind=engine)
 
 def get_db():
@@ -94,7 +108,7 @@ def create_module(exam_id: int, module: schemas.ModuleBase, db: Session = Depend
 
 @app.get("/exams/{exam_id}/modules/", response_model=List[schemas.ModuleResponse])
 def get_modules(exam_id: int, db: Session = Depends(get_db)):
-    return db.query(models.ModuleModel).filter(models.ModuleModel.id == exam_id).all()
+    return db.query(models.ModuleModel).filter(models.ModuleModel.exam_id == exam_id).all()
 
 @app.put("/modules/{module_id}")
 def update_progress(module_id: int, progress: float, db: Session = Depends(get_db)):
@@ -104,3 +118,36 @@ def update_progress(module_id: int, progress: float, db: Session = Depends(get_d
         db.commit()
         return {"status": "updated"}
     raise HTTPException(status_code=404, detail="Module not found")
+
+
+# ==========================================
+# 4. AI ROUTES
+# ==========================================
+
+@app.post("/generate-flashcards/")
+async def generate_flashcards(req: NotesRequest):
+    if not GEMINI_API_KEY:
+        return {"error": "API key missing on server"}
+    
+    try:
+        # Load the Gemini AI model
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Give the AI strict instructions
+        prompt = f"""
+        You are an expert tutor. Create 5 study flashcards from these notes.
+        Respond ONLY with a valid JSON array of objects. Each object must have exactly two keys: 'question' and 'answer'. 
+        Do not include markdown formatting like ```json.
+        
+        Notes:
+        {req.text}
+        """
+        
+        response = model.generate_content(prompt)
+        
+        # Convert the AI's text response into a real JSON object
+        flashcards = json.loads(response.text.strip())
+        return {"flashcards": flashcards}
+        
+    except Exception as e:
+        return {"error": str(e)}
