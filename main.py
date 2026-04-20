@@ -121,11 +121,17 @@ def update_progress(module_id: int, progress: float, db: Session = Depends(get_d
 
 
 # ==========================================
-# 4. AI ROUTES
+# 4. AI & FLASHCARD ROUTES
 # ==========================================
 
+# 1. Fetch all saved flashcards from the database
+@app.get("/flashcards/", response_model=List[schemas.FlashcardResponse])
+def get_flashcards(db: Session = Depends(get_db)):
+    return db.query(models.Flashcard).all()
+
+# 2. Generate new cards AND save them
 @app.post("/generate-flashcards/")
-async def generate_flashcards(req: NotesRequest):
+async def generate_flashcards(req: NotesRequest, db: Session = Depends(get_db)):
     if not GEMINI_API_KEY:
         return {"error": "API key missing on server"}
     
@@ -145,8 +151,19 @@ async def generate_flashcards(req: NotesRequest):
         
         response = model.generate_content(prompt)
         
-        # Convert the AI's text response into a real JSON object
+        # Convert the AI's text response into a JSON object
         flashcards = json.loads(response.text.strip())
+        
+        # --- NEW: SAVE TO DATABASE ---
+        saved_cards = []
+        for card in flashcards:
+            new_card = models.Flashcard(question=card['question'], answer=card['answer'])
+            db.add(new_card)
+            saved_cards.append(new_card)
+        
+        db.commit()
+        # -----------------------------
+        
         return {"flashcards": flashcards}
         
     except Exception as e:

@@ -30,3 +30,10 @@ class ModuleModel(Base):
     progress_percentage = Column(Float, default=0.0)
 
     exam = relationship("Exam", back_populates="modules")
+
+class Flashcard(Base):
+    __tablename__ = "flashcards"
+
+    id = Column(Integer, primary_key=True, index=True)
+    question = Column(String)
+    answer = Column(String)
