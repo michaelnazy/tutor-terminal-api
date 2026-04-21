@@ -40,3 +40,6 @@ class FlashcardResponse(FlashcardBase):
 
     class Config:
         from_attributes = True
+
+class ChatRequest(BaseModel):
+    message: str

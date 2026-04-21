@@ -131,7 +131,7 @@ def get_flashcards(db: Session = Depends(get_db)):
 
 # 2. Generate new cards AND save them
 @app.post("/generate-flashcards/")
-async def generate_flashcards(req: NotesRequest, db: Session = Depends(get_db)):
+async def generate_flashcards(req: schemas.NotesRequest, db: Session = Depends(get_db)):
     if not GEMINI_API_KEY:
         return {"error": "API key missing on server"}
     
@@ -154,7 +154,7 @@ async def generate_flashcards(req: NotesRequest, db: Session = Depends(get_db)):
         # Convert the AI's text response into a JSON object
         flashcards = json.loads(response.text.strip())
         
-        # --- NEW: SAVE TO DATABASE ---
+        # Save to database
         saved_cards = []
         for card in flashcards:
             new_card = models.Flashcard(question=card['question'], answer=card['answer'])
@@ -162,9 +162,31 @@ async def generate_flashcards(req: NotesRequest, db: Session = Depends(get_db)):
             saved_cards.append(new_card)
         
         db.commit()
-        # -----------------------------
         
         return {"flashcards": flashcards}
+        
+    except Exception as e:
+        return {"error": str(e)}
+
+# 3. Nova Chat Route
+@app.post("/chat/")
+async def chat_with_nova(req: schemas.ChatRequest):
+    if not GEMINI_API_KEY:
+        return {"error": "API key missing on server"}
+    
+    try:
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        # We give Nova a specific personality tailored to you
+        prompt = f"""
+        You are Nova, a highly intelligent and encouraging AI study buddy for a software engineering student. 
+        Keep your responses concise, accurate, and formatted nicely.
+        
+        User says: {req.message}
+        """
+        
+        response = model.generate_content(prompt)
+        return {"response": response.text}
         
     except Exception as e:
         return {"error": str(e)}
