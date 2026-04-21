@@ -43,3 +43,7 @@ class FlashcardResponse(FlashcardBase):
 
 class ChatRequest(BaseModel):
     message: str
+
+class NotesRequest(BaseModel):
+    text: str
+
