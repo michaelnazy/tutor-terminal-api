@@ -81,7 +81,13 @@ def delete_course(course_id: int, db: Session = Depends(get_db)):
 # ==========================================
 # 2. EXAM ROUTES (The new middle layer)
 # ==========================================
+# --- NEW: Global route for the Smart Calendar Sync ---
+@app.get("/exams/", response_model=List[schemas.ExamResponse])
+def get_all_exams(db: Session = Depends(get_db)):
+    """Fetches every exam in the database for the Calendar dots"""
+    return db.query(models.Exam).all()
 
+# --- Existing: Specific exams for a single course ---
 @app.post("/courses/{course_id}/exams/", response_model=schemas.ExamResponse)
 def create_exam(course_id: int, exam: schemas.ExamCreate, db: Session = Depends(get_db)):
     new_exam = models.Exam(**exam.dict(), course_id=course_id)
@@ -97,7 +103,6 @@ def get_exams(course_id: int, db: Session = Depends(get_db)):
 # ==========================================
 # 3. MODULE ROUTES
 # ==========================================
-
 @app.post("/exams/{exam_id}/modules/", response_model=schemas.ModuleResponse)
 def create_module(exam_id: int, module: schemas.ModuleBase, db: Session = Depends(get_db)):
     new_module = models.ModuleModel(**module.dict(), exam_id=exam_id)
