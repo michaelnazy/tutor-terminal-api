@@ -79,15 +79,13 @@ def delete_course(course_id: int, db: Session = Depends(get_db)):
     return {"message": "Deleted"}
 
 # ==========================================
-# 2. EXAM ROUTES (The new middle layer)
+# 2. EXAM ROUTES (The middle layer)
 # ==========================================
-# --- NEW: Global route for the Smart Calendar Sync ---
+
 @app.get("/exams/", response_model=List[schemas.ExamResponse])
 def get_all_exams(db: Session = Depends(get_db)):
-    """Fetches every exam in the database for the Calendar dots"""
     return db.query(models.Exam).all()
 
-# --- Existing: Specific exams for a single course ---
 @app.post("/courses/{course_id}/exams/", response_model=schemas.ExamResponse)
 def create_exam(course_id: int, exam: schemas.ExamCreate, db: Session = Depends(get_db)):
     new_exam = models.Exam(**exam.dict(), course_id=course_id)
@@ -99,6 +97,16 @@ def create_exam(course_id: int, exam: schemas.ExamCreate, db: Session = Depends(
 @app.get("/courses/{course_id}/exams/", response_model=List[schemas.ExamResponse])
 def get_exams(course_id: int, db: Session = Depends(get_db)):
     return db.query(models.Exam).filter(models.Exam.course_id == course_id).all()
+
+# --- NEW: The Delete Function ---
+@app.delete("/exams/{exam_id}")
+def delete_exam(exam_id: int, db: Session = Depends(get_db)):
+    db_exam = db.query(models.Exam).filter(models.Exam.id == exam_id).first()
+    if not db_exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    db.delete(db_exam)
+    db.commit()
+    return {"status": "deleted"}
 
 # ==========================================
 # 3. MODULE ROUTES
