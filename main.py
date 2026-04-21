@@ -78,6 +78,17 @@ def delete_course(course_id: int, db: Session = Depends(get_db)):
         db.commit()
     return {"message": "Deleted"}
 
+# --- NEW: Delete an entire course ---
+@app.delete("/courses/{course_id}")
+def delete_course(course_id: int, db: Session = Depends(get_db)):
+    db_course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not db_course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    db.delete(db_course)
+    db.commit()
+    return {"status": "Course deleted"}
+
 # ==========================================
 # 2. EXAM ROUTES (The middle layer)
 # ==========================================
