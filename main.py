@@ -89,6 +89,17 @@ def delete_course(course_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "Course deleted"}
 
+# --- NEW: Update Course Grade for GPA ---
+@app.put("/courses/{course_id}/grade")
+def update_course_grade(course_id: int, grade: float, db: Session = Depends(get_db)):
+    db_course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not db_course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    db_course.final_grade = grade
+    db.commit()
+    return {"status": "Grade updated"}
+
 # ==========================================
 # 2. EXAM ROUTES (The middle layer)
 # ==========================================
