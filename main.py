@@ -51,9 +51,6 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/")
-def read_root():
-    return {"message": "Student Hub API is running!"}
 
 # ==========================================
 # 1. COURSE ROUTES
