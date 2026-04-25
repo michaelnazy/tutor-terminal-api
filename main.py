@@ -1,3 +1,4 @@
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
@@ -225,3 +226,6 @@ async def chat_with_nova(req: schemas.ChatRequest):
         
     except Exception as e:
         return {"error": str(e)}
+    
+# --- NEW: Serve the Flutter Frontend ---
+app.mount("/", StaticFiles(directory="web", html=True), name="frontend")
